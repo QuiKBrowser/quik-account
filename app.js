@@ -1,3 +1,4 @@
+
 const SUPABASE_URL = "https://ujuyzjudqvbrjxttsxno.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_vTj5L8A_7LrVPo3f4oz0WA_T7RjWvrp";
 
@@ -24,7 +25,11 @@ let quikSupabase = null;
 
 document.querySelector("#year").textContent = new Date().getFullYear();
 
-if (window.supabase && SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY.startsWith("sb_publishable_")) {
+if (
+  window.supabase &&
+  SUPABASE_URL.startsWith("https://") &&
+  SUPABASE_ANON_KEY.startsWith("sb_publishable_")
+) {
   quikSupabase = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
@@ -36,17 +41,25 @@ function showMessage(text, isError = false) {
   message.classList.toggle("error", isError);
 }
 
-function showProfile(user) {
+function showProfile(user, session = null) {
   panel.style.display = "none";
   profile.classList.add("show");
 
   profileEmail.textContent = user.email || "E-posta bulunamadı";
   profileIcon.textContent = (user.email || "Q").charAt(0).toUpperCase();
+
+  if (session?.access_token && window.quikAccount) {
+    window.quikAccount.oturumGonder(session.access_token);
+  }
 }
 
 function showLogin() {
   panel.style.display = "";
   profile.classList.remove("show");
+
+  if (window.quikAccount) {
+    window.quikAccount.cikisBildir();
+  }
 }
 
 function setMode(nextMode) {
@@ -59,7 +72,9 @@ function setMode(nextMode) {
   confirmWrap.hidden = !isSignup;
   confirmInput.required = isSignup;
 
-  passwordInput.autocomplete = isSignup ? "new-password" : "current-password";
+  passwordInput.autocomplete = isSignup
+    ? "new-password"
+    : "current-password";
 
   title.textContent = isSignup
     ? "QuiK hesabını oluştur"
@@ -112,24 +127,25 @@ form.addEventListener("submit", async (event) => {
       if (error) throw error;
 
       if (data.session) {
-        showProfile(data.user);
+        showProfile(data.user, data.session);
       } else {
-        showMessage("Kayıt başarılı! E-postanı doğruladıktan sonra giriş yapabilirsin.");
+        showMessage(
+          "Kayıt başarılı! E-postanı doğruladıktan sonra giriş yapabilirsin."
+        );
         form.reset();
       }
-
     } else {
-      const { data, error } = await quikSupabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data, error } =
+        await quikSupabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
       if (error) throw error;
 
-      showProfile(data.user);
+      showProfile(data.user, data.session);
       passwordInput.value = "";
     }
-
   } catch (error) {
     showMessage(error.message || "Bir hata oluştu.", true);
   } finally {
@@ -152,7 +168,6 @@ logoutButton.addEventListener("click", async () => {
     showLogin();
     setMode("login");
     form.reset();
-
   } catch (error) {
     alert("Çıkış yapılamadı: " + error.message);
   } finally {
@@ -160,7 +175,6 @@ logoutButton.addEventListener("click", async () => {
   }
 });
 
-// Sayfa açıldığında mevcut oturumu kontrol et.
 async function checkSession() {
   if (!quikSupabase) return;
 
@@ -172,14 +186,14 @@ async function checkSession() {
   }
 
   if (data.session) {
-    showProfile(data.session.user);
+    showProfile(data.session.user, data.session);
   }
 }
 
 if (quikSupabase) {
   quikSupabase.auth.onAuthStateChange((event, session) => {
     if (session) {
-      showProfile(session.user);
+      showProfile(session.user, session);
     } else if (event === "SIGNED_OUT") {
       showLogin();
     }
