@@ -52,8 +52,11 @@ function showMessage(text, isError = false) {
 function hesapDurumunuBildir(session) {
   if (!window.quikAccount) return;
 
-  if (session?.access_token) {
-    window.quikAccount.oturumGonder(session.access_token);
+  if (session?.access_token && session?.refresh_token) {
+    window.quikAccount.oturumGonder({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
   } else {
     window.quikAccount.cikisBildir();
   }
