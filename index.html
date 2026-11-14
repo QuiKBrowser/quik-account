@@ -1,60 +1,161 @@
+
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#070b17">
+
   <title>QuiK Account</title>
+
   <link rel="stylesheet" href="style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
+
 <body>
   <main class="shell">
+
     <header class="brand">
       <div class="brand-name">QuiK</div>
     </header>
 
+    <!-- Kayıt ve giriş alanı -->
     <section class="panel" aria-labelledby="form-title">
+
       <div class="tabs" role="tablist" aria-label="Hesap işlemi">
-        <button class="tab active" id="signup-tab" type="button">Hesap oluştur</button>
-        <button class="tab" id="login-tab" type="button">Giriş yap</button>
+        <button
+          class="tab active"
+          id="signup-tab"
+          type="button"
+          role="tab"
+          aria-selected="true"
+        >
+          Hesap oluştur
+        </button>
+
+        <button
+          class="tab"
+          id="login-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
+          Giriş yap
+        </button>
       </div>
 
       <h1 id="form-title">QuiK hesabını oluştur</h1>
-      <p class="subtitle" id="form-subtitle">QuiK hizmetleri için ücretsiz hesabını oluştur.</p>
+
+      <p class="subtitle" id="form-subtitle">
+        QuiK hizmetleri için ücretsiz hesabını oluştur.
+      </p>
 
       <form id="auth-form">
+
         <label for="email">E-posta adresi</label>
-        <input id="email" name="email" type="email" autocomplete="email" placeholder="ornek@eposta.com" required>
+
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          placeholder="ornek@eposta.com"
+          required
+        >
 
         <label for="password">Şifre</label>
-        <input id="password" name="password" type="password" autocomplete="new-password" placeholder="En az 8 karakter" minlength="8" required>
+
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="new-password"
+          placeholder="En az 6 karakter"
+          minlength="6"
+          required
+        >
 
         <div id="confirm-wrap">
           <label for="confirm-password">Şifreyi tekrar gir</label>
-          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" placeholder="Şifreni tekrar yaz" minlength="8">
+
+          <input
+            id="confirm-password"
+            name="confirm-password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Şifreni tekrar yaz"
+            minlength="6"
+          >
         </div>
 
-        <button class="submit" id="submit-button" type="submit">QuiK hesabı oluştur</button>
+        <button
+          class="submit"
+          id="submit-button"
+          type="submit"
+        >
+          QuiK hesabı oluştur
+        </button>
+
       </form>
 
-      <p class="message" id="message" role="status" aria-live="polite"></p>
-      <p class="fine-print">Şifren Supabase Auth tarafından güvenli şekilde yönetilir. QuiK şifreni düz metin olarak saklamaz.</p>
+      <p
+        class="message"
+        id="message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <p class="fine-print">
+        Şifren Supabase Auth tarafından güvenli şekilde yönetilir.
+        QuiK şifreni düz metin olarak saklamaz.
+      </p>
+
     </section>
-    <section class="profile" id="profile">
-      <div class="profile-icon" id="profile-icon">Q</div>
 
-      <h1>QuiK hesabın</h1>
-      <p class="subtitle">QuiK dünyasına hoş geldin!</p>
+    <!-- Giriş yapılmış hesap alanı -->
+    <section
+      class="profile"
+      id="profile"
+      aria-labelledby="profile-title"
+    >
 
-      <p class="profile-email" id="profile-email"></p>
+      <div
+        class="profile-icon"
+        id="profile-icon"
+        aria-hidden="true"
+      >
+        Q
+      </div>
 
-      <button class="logout" id="logout-button" type="button">
+      <h1 id="profile-title">QuiK hesabın</h1>
+
+      <p class="subtitle">
+        QuiK dünyasına hoş geldin!
+      </p>
+
+      <p
+        class="profile-email"
+        id="profile-email"
+      ></p>
+
+      <!-- Hesap yönetimi alanları app.js tarafından eklenir -->
+
+      <button
+        class="logout"
+        id="logout-button"
+        type="button"
+      >
         Güvenli çıkış yap
       </button>
+
     </section>
-    <footer>© <span id="year"></span> QuiK</footer>
+
+    <footer>
+      © <span id="year"></span> QuiK
+    </footer>
+
   </main>
 </body>
 </html>
