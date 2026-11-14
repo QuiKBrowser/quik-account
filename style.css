@@ -41,9 +41,9 @@ body {
 }
 
 .brand-name {
-  font-size: 32px;
+  font-size: 42px;
   font-weight: 500;
-  letter-spacing: -1.2px;
+  letter-spacing: -1.5px;
 }
 
 .panel,
@@ -120,6 +120,16 @@ input:focus {
 
 input::placeholder {
   color: #68758e;
+}
+
+button {
+  transition: background .18s, border-color .18s, opacity .18s;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #7898ed;
+  outline-offset: 3px;
 }
 
 .submit {
@@ -217,6 +227,138 @@ input::placeholder {
   background: #131e32;
 }
 
+/* Hesap yönetimi */
+
+.account-management {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.account-section {
+  padding: 18px 0;
+  border-top: 1px solid #263149;
+}
+
+.account-section h2 {
+  margin: 0 0 8px;
+  color: #f5f7ff;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.account-section p {
+  margin: 0 0 13px;
+  color: #8995ad;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.account-button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 9px;
+  padding: 10px 12px;
+  border: 1px solid #34415a;
+  border-radius: 3px;
+  background: #131e32;
+  color: #e8edfa;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.account-button:hover {
+  background: #1b2b49;
+  border-color: #526da5;
+}
+
+.account-button.primary {
+  background: #4165b8;
+  border-color: #4165b8;
+  color: white;
+}
+
+.account-button.primary:hover {
+  background: #5276ca;
+}
+
+.account-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.account-field {
+  margin: 12px 0;
+}
+
+.account-field label {
+  margin-top: 0;
+}
+
+.account-field input {
+  height: 43px;
+}
+
+.account-message {
+  min-height: 18px;
+  margin-top: 9px;
+  color: #a9bfff;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.account-message.error {
+  color: #ff929f;
+}
+
+.connected-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1px solid #293650;
+  background: #0e1728;
+}
+
+.connected-account-info {
+  min-width: 0;
+}
+
+.connected-account-info strong {
+  display: block;
+  color: #e8edfa;
+  font-size: 12px;
+}
+
+.connected-account-info span {
+  display: block;
+  margin-top: 4px;
+  color: #8995ad;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.account-status {
+  flex: none;
+  color: #9db7ff;
+  font-size: 10px;
+}
+
+.account-empty {
+  padding: 12px;
+  border: 1px dashed #34415a;
+  color: #8995ad;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.logout:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
 footer {
   padding-top: 35px;
   text-align: center;
@@ -228,17 +370,4 @@ footer {
   .shell {
     width: 100%;
   }
-}
-body {
-  background: #111b31;
-}
-
-:root {
-  background: #111b31;
-}
-
-.brand-name {
-  font-size: 42px;
-  font-weight: 500;
-  letter-spacing: -1.5px;
 }
