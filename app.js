@@ -71,10 +71,6 @@ function showProfile(user, session = null) {
   panel.style.display = "none";
   profile.classList.add("show");
 
-  profileEmail.textContent = user.email || "E-posta bulunamadı";
-  profileIcon.textContent = (user.email || "Q")
-    .charAt(0)
-    .toUpperCase();
 
   hesapDurumunuBildir(session);
   hesapPaneliniGuncelle(user);
