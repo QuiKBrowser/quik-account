@@ -554,6 +554,10 @@ function hesapElemaniOlustur() {
 
       window.quikAccount.googleBagla(accessToken);
 
+      /* DÜZELTME:
+         Google bağlantısı arka planda sürerken diğer işlemleri kilitleme. */
+      isProcessing = false;
+
       googleButton.textContent = "Bağlantı bekleniyor...";
       status.textContent =
         "Google bağlantısı başlatılıyor. Varsayılan tarayıcıda işlemi tamamla.";
