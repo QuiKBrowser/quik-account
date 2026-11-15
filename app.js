@@ -623,6 +623,7 @@ function sifremiUnuttumButonuEkle() {
 
 /* Şifre sıfırlama bağlantısından gelen kullanıcı */
 
+
 function sifreKurtarmaFormuGoster() {
   const container = hesapElemaniOlustur();
 
@@ -659,7 +660,10 @@ function sifreKurtarmaFormuGoster() {
     <div class="qa-status" id="qa-recovery-status"></div>
   `;
 
-  container.prepend(section);
+  const passwordPanel = container.querySelector('[data-panel="password"]');
+  passwordPanel.appendChild(section);
+
+  container.querySelector('[data-menu="password"]').click();
 
   section.querySelector("#qa-recovery-form").addEventListener(
     "submit",
@@ -707,6 +711,7 @@ function sifreKurtarmaFormuGoster() {
     }
   );
 }
+
 
 /* Kayıt ve giriş */
 
