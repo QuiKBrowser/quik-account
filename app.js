@@ -99,7 +99,6 @@ function showProfile(user, session = null) {
     profileEmail.textContent = user.email || "E-posta bulunamadı";
   }
 
-  // Oturum verilmediyse masaüstü uygulamasına çıkış bildirimi gönderme.
   if (session) {
     hesapDurumunuBildir(session);
   }
@@ -126,7 +125,7 @@ function showLogin() {
 /* Kayıt / giriş sekmeleri */
 
 function setMode(nextMode) {
-  mode = nextMode;
+  mode = nextMode === "login" ? "login" : "signup";
 
   const isSignup = mode === "signup";
 
@@ -367,50 +366,27 @@ function hesapElemaniOlustur() {
     <p class="qa-muted" id="qa-account-email"></p>
 
     <div class="qa-menu">
-      <button
-        type="button"
-        class="qa-menu-button active"
-        data-menu="overview"
-      >
+      <button type="button" class="qa-menu-button active" data-menu="overview">
         Hesap özeti
       </button>
 
-      <button
-        type="button"
-        class="qa-menu-button"
-        data-menu="password"
-      >
+      <button type="button" class="qa-menu-button" data-menu="password">
         Şifre işlemleri
       </button>
 
-      <button
-        type="button"
-        class="qa-menu-button"
-        data-menu="platforms"
-      >
+      <button type="button" class="qa-menu-button" data-menu="platforms">
         Bağlı platformlar
       </button>
 
-      <button
-        type="button"
-        class="qa-menu-button"
-        data-menu="security"
-      >
+      <button type="button" class="qa-menu-button" data-menu="security">
         Güvenlik
       </button>
     </div>
 
     <section class="qa-panel active" data-panel="overview">
       <h3>Hesap özeti</h3>
-
-      <p class="qa-muted">
-        QuiK hesabın başarıyla açık.
-      </p>
-
-      <p class="qa-muted">
-        Hesabına ait e-posta adresi:
-      </p>
-
+      <p class="qa-muted">QuiK hesabın başarıyla açık.</p>
+      <p class="qa-muted">Hesabına ait e-posta adresi:</p>
       <div id="qa-overview-email" class="qa-provider"></div>
     </section>
 
@@ -418,23 +394,11 @@ function hesapElemaniOlustur() {
       <h3>Şifremi değiştir</h3>
 
       <form id="qa-password-form">
-        <input
-          id="qa-new-password"
-          type="password"
-          minlength="6"
-          autocomplete="new-password"
-          placeholder="Yeni şifre"
-          required
-        >
+        <input id="qa-new-password" type="password" minlength="6"
+          autocomplete="new-password" placeholder="Yeni şifre" required>
 
-        <input
-          id="qa-confirm-password"
-          type="password"
-          minlength="6"
-          autocomplete="new-password"
-          placeholder="Yeni şifreyi tekrar yaz"
-          required
-        >
+        <input id="qa-confirm-password" type="password" minlength="6"
+          autocomplete="new-password" placeholder="Yeni şifreyi tekrar yaz" required>
 
         <button type="submit" id="qa-password-submit">
           Şifremi değiştir
@@ -452,7 +416,6 @@ function hesapElemaniOlustur() {
       </button>
 
       <div class="qa-status" id="qa-google-status"></div>
-
       <div id="qa-platform-list"></div>
 
       <p class="qa-muted">
@@ -562,50 +525,48 @@ function hesapElemaniOlustur() {
 
   const googleButton = container.querySelector("#qa-google-link");
 
-  /* Google hesabını bağla */
-const googleButton = container.querySelector("#qa-google-link");
+  googleButton.addEventListener("click", async () => {
+    if (!quikSupabase || isProcessing) return;
 
-googleButton.addEventListener("click", async () => {
-  if (!quikSupabase || isProcessing) return;
+    const status = container.querySelector("#qa-google-status");
 
-  const status = container.querySelector("#qa-google-status");
-
-  if (!window.quikAccount?.googleBagla) {
-    status.textContent =
-      "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
-    return;
-  }
-
-  isProcessing = true;
-  googleButton.disabled = true;
-  googleButton.textContent = "Hazırlanıyor...";
-  status.textContent = "";
-
-  try {
-    const { data, error } = await quikSupabase.auth.getSession();
-
-    if (error) throw error;
-
-    const accessToken = data.session?.access_token;
-
-    if (!accessToken) {
-      throw new Error("Önce QuiK hesabına giriş yapmalısın.");
+    if (!window.quikAccount?.googleBagla) {
+      status.textContent =
+        "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
+      return;
     }
 
-    window.quikAccount.googleBagla(accessToken);
+    isProcessing = true;
+    googleButton.disabled = true;
+    googleButton.textContent = "Hazırlanıyor...";
+    status.textContent = "";
 
-    googleButton.textContent = "Bağlantı bekleniyor...";
-    status.textContent =
-      "Google bağlantısı başlatılıyor. Varsayılan tarayıcıda işlemi tamamla.";
-  } catch (error) {
-    console.error("Google bağlama başlatma hatası:", error);
-    status.textContent = hataMesaji(error);
+    try {
+      const { data, error } = await quikSupabase.auth.getSession();
 
-    googleButton.disabled = false;
-    googleButton.textContent = "Google hesabını bağla";
-    isProcessing = false;
-  }
-});
+      if (error) throw error;
+
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Önce QuiK hesabına giriş yapmalısın.");
+      }
+
+      window.quikAccount.googleBagla(accessToken);
+
+      googleButton.textContent = "Bağlantı bekleniyor...";
+      status.textContent =
+        "Google bağlantısı başlatılıyor. Varsayılan tarayıcıda işlemi tamamla.";
+    } catch (error) {
+      console.error("Google bağlama başlatma hatası:", error);
+      status.textContent = hataMesaji(error);
+
+      googleButton.disabled = false;
+      googleButton.textContent = "Google hesabını bağla";
+      isProcessing = false;
+    }
+  });
+
   /* E-posta ile şifre sıfırlama */
 
   container
@@ -673,8 +634,7 @@ function hesapPaneliniGuncelle(user) {
     const provider = document.createElement("div");
     provider.className = "qa-provider";
 
-    const providerName =
-      identity.provider || "Bilinmeyen platform";
+    const providerName = identity.provider || "Bilinmeyen platform";
 
     provider.textContent =
       providerName.charAt(0).toUpperCase() +
@@ -827,23 +787,11 @@ function sifreKurtarmaFormuGoster() {
     <h3>Yeni şifreni belirle</h3>
 
     <form id="qa-recovery-form">
-      <input
-        id="qa-recovery-password"
-        type="password"
-        minlength="6"
-        autocomplete="new-password"
-        placeholder="Yeni şifre"
-        required
-      >
+      <input id="qa-recovery-password" type="password" minlength="6"
+        autocomplete="new-password" placeholder="Yeni şifre" required>
 
-      <input
-        id="qa-recovery-confirm"
-        type="password"
-        minlength="6"
-        autocomplete="new-password"
-        placeholder="Yeni şifreyi tekrar yaz"
-        required
-      >
+      <input id="qa-recovery-confirm" type="password" minlength="6"
+        autocomplete="new-password" placeholder="Yeni şifreyi tekrar yaz" required>
 
       <button type="submit" id="qa-recovery-submit">
         Yeni şifreyi kaydet
@@ -858,7 +806,6 @@ function sifreKurtarmaFormuGoster() {
 
   passwordPanel.appendChild(section);
 
-  // Kurtarma formu açıldığında doğrudan şifre menüsüne geç.
   container.querySelector('[data-menu="password"]').click();
 
   section
@@ -906,7 +853,6 @@ function sifreKurtarmaFormuGoster() {
         }
 
         section.remove();
-
         showMessage("Şifren başarıyla değiştirildi.");
       } catch (error) {
         console.error("Şifre kurtarma hatası:", error);
@@ -1100,6 +1046,24 @@ if (window.quikAccount?.onToast) {
     }
 
     console.log("QUIK ANA SÜREÇ BİLDİRİMİ:", mesaj);
+
+    if (
+      typeof mesaj === "string" &&
+      (
+        mesaj.includes("tamamlanamadı") ||
+        mesaj.includes("başlatılamadı") ||
+        mesaj.includes("süresi doldu")
+      )
+    ) {
+      const button = document.querySelector("#qa-google-link");
+
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Google hesabını bağla";
+      }
+
+      isProcessing = false;
+    }
   });
 }
 
