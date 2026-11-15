@@ -77,7 +77,6 @@ function showProfile(user, session = null) {
     .toUpperCase();
 
   hesapDurumunuBildir(session);
-
   hesapPaneliniGuncelle(user);
 }
 
@@ -328,10 +327,17 @@ function hesapElemaniOlustur() {
 
     <div class="qa-section">
       <h3>Bağlı platform hesapları</h3>
+
+      <button type="button" id="qa-google-link">
+        Google hesabını bağla
+      </button>
+
+      <div class="qa-status" id="qa-google-status"></div>
+
       <div id="qa-platform-list"></div>
+
       <p class="qa-muted">
-        Burada hesabına bağlı kimlik sağlayıcıları görüntülenir.
-        Yeni platform bağlantısı için ayrıca entegrasyon gerekir.
+        Burada QuiK hesabına bağlı harici platform hesapları görüntülenir.
       </p>
     </div>
 
@@ -393,6 +399,51 @@ function hesapElemaniOlustur() {
       isProcessing = false;
       button.disabled = false;
       button.textContent = "Şifremi değiştir";
+    }
+  });
+
+  /* Google hesabını bağla */
+
+  const googleButton = container.querySelector("#qa-google-link");
+
+  googleButton.addEventListener("click", async () => {
+    if (!quikSupabase || isProcessing) return;
+
+    const status = container.querySelector("#qa-google-status");
+
+    if (!window.quikAccount?.googleBagla) {
+      status.textContent =
+        "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
+      return;
+    }
+
+    isProcessing = true;
+    googleButton.disabled = true;
+    googleButton.textContent = "Hazırlanıyor...";
+    status.textContent = "";
+
+    try {
+      const { data, error } = await quikSupabase.auth.getSession();
+
+      if (error) throw error;
+
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Önce QuiK hesabına giriş yapmalısın.");
+      }
+
+      window.quikAccount.googleBagla(accessToken);
+
+      googleButton.textContent = "Tarayıcı açılıyor...";
+      status.textContent =
+        "Google bağlantısı için varsayılan tarayıcı açılıyor. İşlemi orada tamamla.";
+    } catch (error) {
+      console.error("Google bağlama başlatma hatası:", error);
+      status.textContent = hataMesaji(error);
+      googleButton.disabled = false;
+      googleButton.textContent = "Google hesabını bağla";
+      isProcessing = false;
     }
   });
 
@@ -460,6 +511,71 @@ function hesapPaneliniGuncelle(user) {
   });
 }
 
+/* Google bağlantısı tamamlanınca oturumu ve kimlikleri yenile */
+
+async function googleBaglantisiniYenile(oturum) {
+  if (!quikSupabase) return;
+
+  try {
+    let user;
+
+    if (
+      oturum &&
+      typeof oturum.access_token === "string" &&
+      typeof oturum.refresh_token === "string"
+    ) {
+      const { data, error } = await quikSupabase.auth.setSession({
+        access_token: oturum.access_token,
+        refresh_token: oturum.refresh_token
+      });
+
+      if (error) throw error;
+
+      user = data.user;
+      hesapDurumunuBildir(data.session);
+    } else {
+      const { data, error } = await quikSupabase.auth.getUser();
+
+      if (error) throw error;
+
+      user = data.user;
+    }
+
+    if (user) {
+      aktifKullanici = user;
+      showProfile(user);
+      hesapPaneliniGuncelle(user);
+
+      const status = document.querySelector("#qa-google-status");
+      if (status) {
+        status.textContent = "Google hesabı başarıyla bağlandı.";
+      }
+
+      const button = document.querySelector("#qa-google-link");
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Google hesabını bağla";
+      }
+    }
+  } catch (error) {
+    console.error("Google bağlantısı yenileme hatası:", error);
+
+    const status = document.querySelector("#qa-google-status");
+    if (status) {
+      status.textContent =
+        "Bağlantı tamamlandı ancak hesap bilgileri yenilenemedi. Sayfayı yenileyip tekrar kontrol et.";
+    }
+
+    const button = document.querySelector("#qa-google-link");
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Google hesabını bağla";
+    }
+  } finally {
+    isProcessing = false;
+  }
+}
+
 /* Giriş ekranına şifremi unuttum seçeneği */
 
 function sifremiUnuttumButonuEkle() {
@@ -513,6 +629,8 @@ function sifremiUnuttumButonuEkle() {
 
 function sifreKurtarmaFormuGoster() {
   const container = hesapElemaniOlustur();
+
+  if (container.querySelector("#qa-recovery-form")) return;
 
   const section = document.createElement("div");
   section.className = "qa-section";
@@ -583,8 +701,6 @@ function sifreKurtarmaFormuGoster() {
         if (error) throw error;
 
         section.remove();
-        status.textContent = "";
-
         showMessage("Şifren başarıyla değiştirildi.");
       } catch (error) {
         console.error("Şifre kurtarma hatası:", error);
@@ -752,7 +868,7 @@ async function checkSession() {
   }
 }
 
-/* Supabase oturum olayları */
+/* Supabase oturum olayları ve Google dönüş bildirimi */
 
 if (quikSupabase) {
   quikSupabase.auth.onAuthStateChange((event, session) => {
@@ -766,6 +882,12 @@ if (quikSupabase) {
       showLogin();
     }
   });
+
+  if (window.quikAccount?.onGoogleBaglandi) {
+    window.quikAccount.onGoogleBaglandi((oturum) => {
+      googleBaglantisiniYenile(oturum);
+    });
+  }
 
   sifremiUnuttumButonuEkle();
   checkSession();
