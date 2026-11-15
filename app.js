@@ -2,6 +2,8 @@
 const SUPABASE_URL = "https://ujuyzjudqvbrjxttsxno.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_vTj5L8A_7LrVPo3f4oz0WA_T7RjWvrp";
 
+/* HTML elemanları */
+
 const form = document.querySelector("#auth-form");
 const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
@@ -16,7 +18,6 @@ const loginTab = document.querySelector("#login-tab");
 
 const profile = document.querySelector("#profile");
 const profileEmail = document.querySelector("#profile-email");
-const profileIcon = document.querySelector("#profile-icon");
 const logoutButton = document.querySelector("#logout-button");
 const panel = document.querySelector(".panel");
 
@@ -25,7 +26,13 @@ let quikSupabase = null;
 let isProcessing = false;
 let aktifKullanici = null;
 
-document.querySelector("#year").textContent = new Date().getFullYear();
+const yearElement = document.querySelector("#year");
+
+if (yearElement) {
+  yearElement.textContent = new Date().getFullYear();
+}
+
+/* Supabase bağlantısı */
 
 if (
   window.supabase &&
@@ -45,45 +52,78 @@ if (
   );
 }
 
+/* Genel mesaj */
+
 function showMessage(text, isError = false) {
+  if (!message) return;
+
   message.textContent = text;
   message.classList.toggle("error", isError);
 }
+
+/* QuiK masaüstü uygulamasına oturum bildirimi */
 
 function hesapDurumunuBildir(session) {
   if (!window.quikAccount) return;
 
   if (session?.access_token && session?.refresh_token) {
-    window.quikAccount.oturumGonder({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token
-    });
+    if (typeof window.quikAccount.oturumGonder === "function") {
+      window.quikAccount.oturumGonder({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token
+      });
+    }
   } else {
-    window.quikAccount.cikisBildir();
+    if (typeof window.quikAccount.cikisBildir === "function") {
+      window.quikAccount.cikisBildir();
+    }
   }
 }
+
+/* Profil ekranını aç */
 
 function showProfile(user, session = null) {
   if (!user) return;
 
   aktifKullanici = user;
 
-  panel.style.display = "none";
-  profile.classList.add("show");
+  if (panel) {
+    panel.style.display = "none";
+  }
 
+  if (profile) {
+    profile.classList.add("show");
+  }
 
-  hesapDurumunuBildir(session);
+  if (profileEmail) {
+    profileEmail.textContent = user.email || "E-posta bulunamadı";
+  }
+
+  // Oturum verilmediyse masaüstü uygulamasına çıkış bildirimi gönderme.
+  if (session) {
+    hesapDurumunuBildir(session);
+  }
+
   hesapPaneliniGuncelle(user);
 }
+
+/* Giriş ekranını aç */
 
 function showLogin() {
   aktifKullanici = null;
 
-  panel.style.display = "";
-  profile.classList.remove("show");
+  if (panel) {
+    panel.style.display = "";
+  }
+
+  if (profile) {
+    profile.classList.remove("show");
+  }
 
   hesapDurumunuBildir(null);
 }
+
+/* Kayıt / giriş sekmeleri */
 
 function setMode(nextMode) {
   mode = nextMode;
@@ -114,6 +154,8 @@ function setMode(nextMode) {
 
   showMessage("");
 }
+
+/* Hata mesajlarını Türkçeleştir */
 
 function hataMesaji(error) {
   const kod = error?.code || "";
@@ -156,7 +198,7 @@ function hataMesaji(error) {
   return mesaj || "Bir hata oluştu. Lütfen tekrar dene.";
 }
 
-/* Dinamik hesap yönetimi arayüzü */
+/* Hesap yönetimi tasarımı */
 
 function hesapStiliniEkle() {
   if (document.querySelector("#quik-account-style")) return;
@@ -188,13 +230,40 @@ function hesapStiliniEkle() {
       line-height: 1.5;
     }
 
-    #quik-account-management .qa-section {
+    #quik-account-management .qa-menu {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    #quik-account-management .qa-menu-button {
+      min-height: 42px;
+      margin: 0;
+      padding: 9px 7px;
+      font-size: 12px;
+      background: #111b3d;
+      border: 1px solid #25345d;
+    }
+
+    #quik-account-management .qa-menu-button.active {
+      background: #263d78;
+      border-color: #668ce3;
+      color: #ffffff;
+    }
+
+    #quik-account-management .qa-panel {
+      display: none;
       margin-top: 20px;
       padding-top: 16px;
       border-top: 1px solid #25345d;
     }
 
-    #quik-account-management .qa-section h3 {
+    #quik-account-management .qa-panel.active {
+      display: block;
+    }
+
+    #quik-account-management .qa-panel h3 {
       margin: 0 0 12px;
       font-size: 14px;
     }
@@ -254,10 +323,6 @@ function hesapStiliniEkle() {
       font-size: 12px;
     }
 
-    #quik-account-management .qa-hidden {
-      display: none;
-    }
-
     #quik-forgot-button {
       display: block;
       margin: 12px auto;
@@ -272,10 +337,19 @@ function hesapStiliniEkle() {
     #quik-forgot-button:hover {
       color: #e8eeff;
     }
+
+    @media (max-width: 420px) {
+      #quik-account-management {
+        width: 94%;
+        padding: 15px;
+      }
+    }
   `;
 
   document.head.appendChild(style);
 }
+
+/* Hesap yönetimi menüsünü oluştur */
 
 function hesapElemaniOlustur() {
   hesapStiliniEkle();
@@ -289,10 +363,59 @@ function hesapElemaniOlustur() {
 
   container.innerHTML = `
     <h2>QuiK Hesabım</h2>
+
     <p class="qa-muted" id="qa-account-email"></p>
 
-    <div class="qa-section">
-      <h3>Şifre işlemleri</h3>
+    <div class="qa-menu">
+      <button
+        type="button"
+        class="qa-menu-button active"
+        data-menu="overview"
+      >
+        Hesap özeti
+      </button>
+
+      <button
+        type="button"
+        class="qa-menu-button"
+        data-menu="password"
+      >
+        Şifre işlemleri
+      </button>
+
+      <button
+        type="button"
+        class="qa-menu-button"
+        data-menu="platforms"
+      >
+        Bağlı platformlar
+      </button>
+
+      <button
+        type="button"
+        class="qa-menu-button"
+        data-menu="security"
+      >
+        Güvenlik
+      </button>
+    </div>
+
+    <section class="qa-panel active" data-panel="overview">
+      <h3>Hesap özeti</h3>
+
+      <p class="qa-muted">
+        QuiK hesabın başarıyla açık.
+      </p>
+
+      <p class="qa-muted">
+        Hesabına ait e-posta adresi:
+      </p>
+
+      <div id="qa-overview-email" class="qa-provider"></div>
+    </section>
+
+    <section class="qa-panel" data-panel="password">
+      <h3>Şifremi değiştir</h3>
 
       <form id="qa-password-form">
         <input
@@ -319,9 +442,9 @@ function hesapElemaniOlustur() {
       </form>
 
       <div class="qa-status" id="qa-password-status"></div>
-    </div>
+    </section>
 
-    <div class="qa-section">
+    <section class="qa-panel" data-panel="platforms">
       <h3>Bağlı platform hesapları</h3>
 
       <button type="button" id="qa-google-link">
@@ -335,18 +458,48 @@ function hesapElemaniOlustur() {
       <p class="qa-muted">
         Burada QuiK hesabına bağlı harici platform hesapları görüntülenir.
       </p>
-    </div>
+    </section>
 
-    <div class="qa-section">
+    <section class="qa-panel" data-panel="security">
       <h3>Hesap güvenliği</h3>
+
+      <p class="qa-muted">
+        E-posta adresine şifre sıfırlama bağlantısı gönderebilirsin.
+      </p>
+
       <button type="button" id="qa-reset-password">
-        E-posta ile şifre sıfırlama bağlantısı gönder
+        Şifre sıfırlama bağlantısı gönder
       </button>
+
       <div class="qa-status" id="qa-reset-status"></div>
-    </div>
+    </section>
   `;
 
   profile.appendChild(container);
+
+  /* Menü geçişleri */
+
+  const menuButtons = container.querySelectorAll("[data-menu]");
+  const menuPanels = container.querySelectorAll("[data-panel]");
+
+  menuButtons.forEach((menuButton) => {
+    menuButton.addEventListener("click", () => {
+      const selectedMenu = menuButton.dataset.menu;
+
+      menuButtons.forEach((button) => {
+        button.classList.toggle("active", button === menuButton);
+      });
+
+      menuPanels.forEach((menuPanel) => {
+        menuPanel.classList.toggle(
+          "active",
+          menuPanel.dataset.panel === selectedMenu
+        );
+      });
+    });
+  });
+
+  /* Şifre değiştirme */
 
   const passwordForm = container.querySelector("#qa-password-form");
 
@@ -355,10 +508,17 @@ function hesapElemaniOlustur() {
 
     if (!quikSupabase || isProcessing) return;
 
-    const newPassword = container.querySelector("#qa-new-password").value;
-    const confirmPassword = container.querySelector("#qa-confirm-password").value;
-    const status = container.querySelector("#qa-password-status");
-    const button = container.querySelector("#qa-password-submit");
+    const newPassword =
+      container.querySelector("#qa-new-password").value;
+
+    const confirmPassword =
+      container.querySelector("#qa-confirm-password").value;
+
+    const status =
+      container.querySelector("#qa-password-status");
+
+    const button =
+      container.querySelector("#qa-password-submit");
 
     if (newPassword.length < 6) {
       status.textContent = "Şifre en az 6 karakter olmalı.";
@@ -429,7 +589,7 @@ function hesapElemaniOlustur() {
         throw new Error("Önce QuiK hesabına giriş yapmalısın.");
       }
 
-      window.quikAccount.googleBagla(accessToken);
+      await window.quikAccount.googleBagla(accessToken);
 
       googleButton.textContent = "Tarayıcı açılıyor...";
       status.textContent =
@@ -437,48 +597,59 @@ function hesapElemaniOlustur() {
     } catch (error) {
       console.error("Google bağlama başlatma hatası:", error);
       status.textContent = hataMesaji(error);
+
       googleButton.disabled = false;
       googleButton.textContent = "Google hesabını bağla";
-      isProcessing = false;
-    }
-  });
-
-  container.querySelector("#qa-reset-password").addEventListener("click", async () => {
-    if (!quikSupabase || !aktifKullanici?.email || isProcessing) return;
-
-    const status = container.querySelector("#qa-reset-status");
-
-    isProcessing = true;
-    status.textContent = "Bağlantı gönderiliyor...";
-
-    try {
-      const { error } = await quikSupabase.auth.resetPasswordForEmail(
-        aktifKullanici.email,
-        {
-          redirectTo: window.location.origin
-        }
-      );
-
-      if (error) throw error;
-
-      status.textContent =
-        "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.";
-    } catch (error) {
-      console.error("Şifre sıfırlama hatası:", error);
-      status.textContent = hataMesaji(error);
     } finally {
       isProcessing = false;
     }
   });
 
+  /* E-posta ile şifre sıfırlama */
+
+  container
+    .querySelector("#qa-reset-password")
+    .addEventListener("click", async () => {
+      if (!quikSupabase || !aktifKullanici?.email || isProcessing) return;
+
+      const status = container.querySelector("#qa-reset-status");
+
+      isProcessing = true;
+      status.textContent = "Bağlantı gönderiliyor...";
+
+      try {
+        const { error } =
+          await quikSupabase.auth.resetPasswordForEmail(
+            aktifKullanici.email,
+            {
+              redirectTo: window.location.origin
+            }
+          );
+
+        if (error) throw error;
+
+        status.textContent =
+          "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.";
+      } catch (error) {
+        console.error("Şifre sıfırlama hatası:", error);
+        status.textContent = hataMesaji(error);
+      } finally {
+        isProcessing = false;
+      }
+    });
+
   return container;
 }
+
+/* Hesap bilgilerini güncelle */
 
 function hesapPaneliniGuncelle(user) {
   const container = hesapElemaniOlustur();
 
-  container.querySelector("#qa-account-email").textContent =
-    user.email || "E-posta bulunamadı";
+  const email = user.email || "E-posta bulunamadı";
+
+  container.querySelector("#qa-account-email").textContent = email;
+  container.querySelector("#qa-overview-email").textContent = email;
 
   const platformList = container.querySelector("#qa-platform-list");
   platformList.replaceChildren();
@@ -490,7 +661,9 @@ function hesapPaneliniGuncelle(user) {
   if (identities.length === 0) {
     const bilgi = document.createElement("p");
     bilgi.className = "qa-muted";
-    bilgi.textContent = "Şu anda bağlı harici platform hesabı bulunmuyor.";
+    bilgi.textContent =
+      "Şu anda bağlı harici platform hesabı bulunmuyor.";
+
     platformList.appendChild(bilgi);
     return;
   }
@@ -499,21 +672,25 @@ function hesapPaneliniGuncelle(user) {
     const provider = document.createElement("div");
     provider.className = "qa-provider";
 
-    const providerName = identity.provider || "Bilinmeyen platform";
+    const providerName =
+      identity.provider || "Bilinmeyen platform";
+
     provider.textContent =
-      providerName.charAt(0).toUpperCase() + providerName.slice(1);
+      providerName.charAt(0).toUpperCase() +
+      providerName.slice(1);
 
     platformList.appendChild(provider);
   });
 }
 
-/* Google bağlantısı tamamlanınca oturumu ve kimlikleri yenile */
+/* Google bağlantısı tamamlanınca oturumu yenile */
 
 async function googleBaglantisiniYenile(oturum) {
   if (!quikSupabase) return;
 
   try {
     let user;
+    let session;
 
     if (
       oturum &&
@@ -528,26 +705,35 @@ async function googleBaglantisiniYenile(oturum) {
       if (error) throw error;
 
       user = data.user;
-      hesapDurumunuBildir(data.session);
+      session = data.session;
     } else {
       const { data, error } = await quikSupabase.auth.getUser();
 
       if (error) throw error;
 
       user = data.user;
+
+      const sessionResult = await quikSupabase.auth.getSession();
+
+      if (sessionResult.error) throw sessionResult.error;
+
+      session = sessionResult.data.session;
     }
 
     if (user) {
       aktifKullanici = user;
-      showProfile(user);
+
+      showProfile(user, session);
       hesapPaneliniGuncelle(user);
 
       const status = document.querySelector("#qa-google-status");
+
       if (status) {
         status.textContent = "Google hesabı başarıyla bağlandı.";
       }
 
       const button = document.querySelector("#qa-google-link");
+
       if (button) {
         button.disabled = false;
         button.textContent = "Google hesabını bağla";
@@ -557,12 +743,14 @@ async function googleBaglantisiniYenile(oturum) {
     console.error("Google bağlantısı yenileme hatası:", error);
 
     const status = document.querySelector("#qa-google-status");
+
     if (status) {
       status.textContent =
         "Bağlantı tamamlandı ancak hesap bilgileri yenilenemedi. Sayfayı yenileyip tekrar kontrol et.";
     }
 
     const button = document.querySelector("#qa-google-link");
+
     if (button) {
       button.disabled = false;
       button.textContent = "Google hesabını bağla";
@@ -578,6 +766,7 @@ function sifremiUnuttumButonuEkle() {
   if (document.querySelector("#quik-forgot-button")) return;
 
   const button = document.createElement("button");
+
   button.type = "button";
   button.id = "quik-forgot-button";
   button.textContent = "Şifremi unuttum";
@@ -599,12 +788,13 @@ function sifremiUnuttumButonuEkle() {
     button.disabled = true;
 
     try {
-      const { error } = await quikSupabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: window.location.origin
-        }
-      );
+      const { error } =
+        await quikSupabase.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo: window.location.origin
+          }
+        );
 
       if (error) throw error;
 
@@ -623,13 +813,13 @@ function sifremiUnuttumButonuEkle() {
 
 /* Şifre sıfırlama bağlantısından gelen kullanıcı */
 
-
 function sifreKurtarmaFormuGoster() {
   const container = hesapElemaniOlustur();
 
   if (container.querySelector("#qa-recovery-form")) return;
 
   const section = document.createElement("div");
+
   section.className = "qa-section";
 
   section.innerHTML = `
@@ -654,20 +844,25 @@ function sifreKurtarmaFormuGoster() {
         required
       >
 
-      <button type="submit">Yeni şifreyi kaydet</button>
+      <button type="submit" id="qa-recovery-submit">
+        Yeni şifreyi kaydet
+      </button>
     </form>
 
     <div class="qa-status" id="qa-recovery-status"></div>
   `;
 
-  const passwordPanel = container.querySelector('[data-panel="password"]');
+  const passwordPanel =
+    container.querySelector('[data-panel="password"]');
+
   passwordPanel.appendChild(section);
 
+  // Kurtarma formu açıldığında doğrudan şifre menüsüne geç.
   container.querySelector('[data-menu="password"]').click();
 
-  section.querySelector("#qa-recovery-form").addEventListener(
-    "submit",
-    async (event) => {
+  section
+    .querySelector("#qa-recovery-form")
+    .addEventListener("submit", async (event) => {
       event.preventDefault();
 
       if (!quikSupabase || isProcessing) return;
@@ -681,6 +876,9 @@ function sifreKurtarmaFormuGoster() {
       const status =
         section.querySelector("#qa-recovery-status");
 
+      const button =
+        section.querySelector("#qa-recovery-submit");
+
       if (password.length < 6) {
         status.textContent = "Şifre en az 6 karakter olmalı.";
         return;
@@ -692,50 +890,54 @@ function sifreKurtarmaFormuGoster() {
       }
 
       isProcessing = true;
+      button.disabled = true;
+      button.textContent = "Kaydediliyor...";
 
       try {
-        const { error } = await quikSupabase.auth.updateUser({
+        const { data, error } = await quikSupabase.auth.updateUser({
           password
         });
 
         if (error) throw error;
 
+        if (data.user) {
+          aktifKullanici = data.user;
+        }
+
         section.remove();
+
         showMessage("Şifren başarıyla değiştirildi.");
       } catch (error) {
         console.error("Şifre kurtarma hatası:", error);
         status.textContent = hataMesaji(error);
       } finally {
         isProcessing = false;
+
+        if (button.isConnected) {
+          button.disabled = false;
+          button.textContent = "Yeni şifreyi kaydet";
+        }
       }
-    }
-  );
+    });
 }
 
-
-/* Kayıt ve giriş */
+/* Kayıt sekmesi */
 
 signupTab.addEventListener("click", () => {
-  // Ana süreçten gelen bildirimleri hesap sayfasında göster
-if (window.quikAccount?.onToast) {
-  window.quikAccount.onToast((mesaj) => {
-    const status = document.querySelector("#qa-google-status");
-
-    if (status) {
-      status.textContent = String(mesaj);
-    } else {
-      showMessage(String(mesaj));
-    }
-
-    console.log("QUIK ANA SÜREÇ BİLDİRİMİ:", mesaj);
-  });
-}
-  if (!isProcessing) setMode("signup");
+  if (!isProcessing) {
+    setMode("signup");
+  }
 });
+
+/* Giriş sekmesi */
 
 loginTab.addEventListener("click", () => {
-  if (!isProcessing) setMode("login");
+  if (!isProcessing) {
+    setMode("login");
+  }
 });
+
+/* Kayıt ve giriş işlemleri */
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -745,7 +947,10 @@ form.addEventListener("submit", async (event) => {
   showMessage("");
 
   if (!quikSupabase) {
-    showMessage("Supabase bağlantısı kurulamadı. Ayarları kontrol et.", true);
+    showMessage(
+      "Supabase bağlantısı kurulamadı. Ayarları kontrol et.",
+      true
+    );
     return;
   }
 
@@ -845,6 +1050,7 @@ logoutButton.addEventListener("click", async () => {
     showLogin();
     setMode("login");
     form.reset();
+
     showMessage("QuiK hesabından çıkış yapıldı.");
   } catch (error) {
     console.error("QuiK çıkış hatası:", error);
@@ -864,16 +1070,13 @@ async function checkSession() {
   }
 
   try {
-    const { data, error } = await quikSupabase.auth.getSession();
+    const { data, error } =
+      await quikSupabase.auth.getSession();
 
     if (error) throw error;
 
     if (data.session?.user) {
       showProfile(data.session.user, data.session);
-
-      if (data.session.user.recovery_sent_at) {
-        sifreKurtarmaFormuGoster();
-      }
     } else {
       showLogin();
     }
@@ -881,6 +1084,22 @@ async function checkSession() {
     console.error("QuiK oturum kontrol hatası:", error);
     showLogin();
   }
+}
+
+/* Ana süreç bildirimlerini dinle */
+
+if (window.quikAccount?.onToast) {
+  window.quikAccount.onToast((mesaj) => {
+    const status = document.querySelector("#qa-google-status");
+
+    if (status) {
+      status.textContent = String(mesaj);
+    } else {
+      showMessage(String(mesaj));
+    }
+
+    console.log("QUIK ANA SÜREÇ BİLDİRİMİ:", mesaj);
+  });
 }
 
 /* Supabase oturum olayları ve Google dönüş bildirimi */
@@ -907,7 +1126,10 @@ if (quikSupabase) {
   sifremiUnuttumButonuEkle();
   checkSession();
 } else {
-  showMessage("Supabase bağlantısı kurulamadı. Ayarları kontrol et.", true);
+  showMessage(
+    "Supabase bağlantısı kurulamadı. Ayarları kontrol et.",
+    true
+  );
 }
 
 setMode("signup");
