@@ -715,6 +715,20 @@ function sifreKurtarmaFormuGoster() {
 /* Kayıt ve giriş */
 
 signupTab.addEventListener("click", () => {
+  // Ana süreçten gelen bildirimleri hesap sayfasında göster
+if (window.quikAccount?.onToast) {
+  window.quikAccount.onToast((mesaj) => {
+    const status = document.querySelector("#qa-google-status");
+
+    if (status) {
+      status.textContent = String(mesaj);
+    } else {
+      showMessage(String(mesaj));
+    }
+
+    console.log("QUIK ANA SÜREÇ BİLDİRİMİ:", mesaj);
+  });
+}
   if (!isProcessing) setMode("signup");
 });
 
