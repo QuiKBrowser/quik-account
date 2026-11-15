@@ -380,3 +380,23 @@ footer {
     padding: 23px 19px;
   }
 }
+
+/* LOGO ÇERÇEVESİNİ TAMAMEN KALDIR */
+.brand-logo,
+.profile-logo {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Logoyu çevreleyen kapsayıcıda da çerçeve olmasın */
+.brand,
+.profile > img {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
