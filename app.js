@@ -562,49 +562,50 @@ function hesapElemaniOlustur() {
 
   const googleButton = container.querySelector("#qa-google-link");
 
-  googleButton.addEventListener("click", async () => {
-    if (!quikSupabase || isProcessing) return;
+  /* Google hesabını bağla */
+const googleButton = container.querySelector("#qa-google-link");
 
-    const status = container.querySelector("#qa-google-status");
+googleButton.addEventListener("click", async () => {
+  if (!quikSupabase || isProcessing) return;
 
-    if (!window.quikAccount?.googleBagla) {
-      status.textContent =
-        "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
-      return;
+  const status = container.querySelector("#qa-google-status");
+
+  if (!window.quikAccount?.googleBagla) {
+    status.textContent =
+      "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
+    return;
+  }
+
+  isProcessing = true;
+  googleButton.disabled = true;
+  googleButton.textContent = "Hazırlanıyor...";
+  status.textContent = "";
+
+  try {
+    const { data, error } = await quikSupabase.auth.getSession();
+
+    if (error) throw error;
+
+    const accessToken = data.session?.access_token;
+
+    if (!accessToken) {
+      throw new Error("Önce QuiK hesabına giriş yapmalısın.");
     }
 
-    isProcessing = true;
-    googleButton.disabled = true;
-    googleButton.textContent = "Hazırlanıyor...";
-    status.textContent = "";
+    window.quikAccount.googleBagla(accessToken);
 
-    try {
-      const { data, error } = await quikSupabase.auth.getSession();
+    googleButton.textContent = "Bağlantı bekleniyor...";
+    status.textContent =
+      "Google bağlantısı başlatılıyor. Varsayılan tarayıcıda işlemi tamamla.";
+  } catch (error) {
+    console.error("Google bağlama başlatma hatası:", error);
+    status.textContent = hataMesaji(error);
 
-      if (error) throw error;
-
-      const accessToken = data.session?.access_token;
-
-      if (!accessToken) {
-        throw new Error("Önce QuiK hesabına giriş yapmalısın.");
-      }
-
-      await window.quikAccount.googleBagla(accessToken);
-
-      googleButton.textContent = "Tarayıcı açılıyor...";
-      status.textContent =
-        "Google bağlantısı için varsayılan tarayıcı açılıyor. İşlemi orada tamamla.";
-    } catch (error) {
-      console.error("Google bağlama başlatma hatası:", error);
-      status.textContent = hataMesaji(error);
-
-      googleButton.disabled = false;
-      googleButton.textContent = "Google hesabını bağla";
-    } finally {
-      isProcessing = false;
-    }
-  });
-
+    googleButton.disabled = false;
+    googleButton.textContent = "Google hesabını bağla";
+    isProcessing = false;
+  }
+});
   /* E-posta ile şifre sıfırlama */
 
   container
