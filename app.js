@@ -1112,7 +1112,7 @@ if (window.quikAccount?.onToast) {
       const button = document.querySelector("#qa-google-link");
 
       if (button) {
-        const bagli = googleHesabiBagliMi(user);
+        const bagli = googleHesabiBagliMi(aktifKullanici);
         button.disabled = bagli;
         button.textContent = bagli
           ? "Google hesabı bağlı"
