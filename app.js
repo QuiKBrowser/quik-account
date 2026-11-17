@@ -632,7 +632,9 @@ function googleHesabiBagliMi(user) {
     ? user.app_metadata.providers
     : [];
 
-  return identityBagli || providers.includes("google");
+  return identityBagli ||
+    providers.includes("google") ||
+    user.app_metadata?.provider === "google";
 }
 
 /* Hesap bilgilerini güncelle */
@@ -742,12 +744,8 @@ async function googleBaglantisiniYenile(oturum) {
         status.textContent = "Google hesabı başarıyla bağlandı.";
       }
 
-      const button = document.querySelector("#qa-google-link");
-
-      if (button) {
-        button.disabled = false;
-        button.textContent = "Google hesabını bağla";
-      }
+      // Butonun metnini burada elle sıfırlama.
+      // Güncel kullanıcı verisine göre hesapPaneliniGuncelle belirlesin.
     }
   } catch (error) {
     console.error("Google bağlantısı yenileme hatası:", error);
@@ -1072,7 +1070,14 @@ async function checkSession() {
     if (error) throw error;
 
     if (data.session?.user) {
-      showProfile(data.session.user, data.session);
+      // getSession içindeki kullanıcı nesnesi eski kalabilir.
+      // Google bağlantı durumunu Supabase'ten güncel kullanıcıyla doğrula.
+      const { data: userData, error: userError } =
+        await quikSupabase.auth.getUser();
+
+      if (userError) throw userError;
+
+      showProfile(userData.user || data.session.user, data.session);
     } else {
       showLogin();
     }
