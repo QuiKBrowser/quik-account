@@ -528,6 +528,14 @@ function hesapElemaniOlustur() {
   googleButton.addEventListener("click", async () => {
     if (!quikSupabase || isProcessing) return;
 
+    if (googleHesabiBagliMi(aktifKullanici)) {
+      googleButton.disabled = true;
+      googleButton.textContent = "Google hesabı bağlı";
+      const status = container.querySelector("#qa-google-status");
+      status.textContent = "Google hesabın bu QuiK hesabına zaten bağlı.";
+      return;
+    }
+
     const status = container.querySelector("#qa-google-status");
 
     if (!window.quikAccount?.googleBagla) {
@@ -607,6 +615,26 @@ function hesapElemaniOlustur() {
   return container;
 }
 
+/* Google bağlantı durumunu hem identities hem providers bilgisinden kontrol et */
+
+function googleHesabiBagliMi(user) {
+  if (!user) return false;
+
+  const identities = Array.isArray(user.identities)
+    ? user.identities
+    : [];
+
+  const identityBagli = identities.some(
+    (identity) => identity?.provider === "google"
+  );
+
+  const providers = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers
+    : [];
+
+  return identityBagli || providers.includes("google");
+}
+
 /* Hesap bilgilerini güncelle */
 
 function hesapPaneliniGuncelle(user) {
@@ -623,6 +651,23 @@ function hesapPaneliniGuncelle(user) {
   const identities = Array.isArray(user.identities)
     ? user.identities
     : [];
+
+  const googleButton = container.querySelector("#qa-google-link");
+  const googleStatus = container.querySelector("#qa-google-status");
+  const googleBagli = googleHesabiBagliMi(user);
+
+  if (googleButton) {
+    googleButton.disabled = googleBagli;
+    googleButton.textContent = googleBagli
+      ? "Google hesabı bağlı"
+      : "Google hesabını bağla";
+  }
+
+  if (googleStatus) {
+    googleStatus.textContent = googleBagli
+      ? "Google hesabın bu QuiK hesabına bağlı."
+      : "";
+  }
 
   if (identities.length === 0) {
     const bilgi = document.createElement("p");
