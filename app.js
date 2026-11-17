@@ -1112,8 +1112,11 @@ if (window.quikAccount?.onToast) {
       const button = document.querySelector("#qa-google-link");
 
       if (button) {
-        button.disabled = false;
-        button.textContent = "Google hesabını bağla";
+        const bagli = googleHesabiBagliMi(user);
+        button.disabled = bagli;
+        button.textContent = bagli
+          ? "Google hesabı bağlı"
+          : "Google hesabını bağla";
       }
 
       isProcessing = false;
