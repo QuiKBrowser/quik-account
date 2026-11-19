@@ -630,12 +630,6 @@ function hesapElemaniOlustur() {
       return;
     }
 
-    if (!window.quikAccount?.googleBagla) {
-      googleStatus.textContent =
-        "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
-      return;
-    }
-
     googleConsent.classList.add("show");
     googleButton.textContent = "İzinler inceleniyor";
     googleStatus.textContent = "Devam etmeden önce QuiK'in istediği erişimleri incele.";
@@ -664,6 +658,10 @@ function hesapElemaniOlustur() {
 
       if (!accessToken) {
         throw new Error("Önce QuiK hesabına giriş yapmalısın.");
+      }
+
+      if (!window.quikAccount?.googleBagla) {
+        throw new Error("Google hesabı bağlantısı yalnızca QuiK masaüstü uygulamasında başlatılabilir.");
       }
 
       // Son onay ve gerçek yetkilendirme Google'ın OAuth ekranında yapılır.
