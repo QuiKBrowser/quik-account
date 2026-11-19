@@ -322,6 +322,71 @@ function hesapStiliniEkle() {
       font-size: 12px;
     }
 
+    #quik-account-management .qa-google-consent {
+      display: none;
+      margin-top: 14px;
+      padding: 15px;
+      border: 1px solid #304779;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #101d3c, #0a1228);
+    }
+
+    #quik-account-management .qa-google-consent.show {
+      display: block;
+    }
+
+    #quik-account-management .qa-google-consent h4 {
+      margin: 0 0 7px;
+      color: #edf2ff;
+      font-size: 14px;
+    }
+
+    #quik-account-management .qa-google-consent > p {
+      color: #91a0c4;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    #quik-account-management .qa-google-permission {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-top: 1px solid #25345d;
+      color: #e8eeff;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #quik-account-management .qa-google-permission span {
+      display: block;
+      color: #91a0c4;
+      margin-top: 3px;
+    }
+
+    #quik-account-management .qa-google-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    #quik-account-management .qa-google-actions button {
+      flex: 1;
+      margin: 0;
+    }
+
+    #quik-account-management .qa-google-actions .qa-google-continue {
+      background: #3158a4;
+      border-color: #527bd0;
+    }
+
+    #quik-account-management .qa-google-note {
+      margin: 10px 0 0;
+      color: #8192b8;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
     #quik-forgot-button {
       display: block;
       margin: 12px auto;
@@ -414,6 +479,34 @@ function hesapElemaniOlustur() {
       <button type="button" id="qa-google-link">
         Google hesabını bağla
       </button>
+
+      <div class="qa-google-consent" id="qa-google-consent" aria-live="polite">
+        <h4>QuiK Google izinleri</h4>
+        <p>QuiK'in Google hizmetlerini kullanabilmesi için aşağıdaki erişimleri talep edeceğiz. Yalnızca devam edersen Google'ın kendi güvenli izin ekranına yönlendirilirsin.</p>
+
+        <div class="qa-google-permission">
+          <div>✉</div>
+          <div><strong>Gmail</strong><span>E-postalarını görüntüleme ve senin isteğinle e-posta gönderme.</span></div>
+        </div>
+        <div class="qa-google-permission">
+          <div>▣</div>
+          <div><strong>Google Drive</strong><span>QuiK'in oluşturduğu veya QuiK üzerinden açtığın dosyalara erişme.</span></div>
+        </div>
+        <div class="qa-google-permission">
+          <div>▶</div>
+          <div><strong>YouTube</strong><span>Kanal bilgilerini görüntüleme ve senin başlattığın video yükleme işlemleri.</span></div>
+        </div>
+        <div class="qa-google-permission">
+          <div>◉</div>
+          <div><strong>Temel hesap bilgileri</strong><span>Google hesabının e-posta adresi ve profil bilgileri.</span></div>
+        </div>
+
+        <p class="qa-google-note">Bu ekran QuiK'in istediği izinleri açıklar. İzinleri gerçekten verme veya reddetme işlemi bir sonraki adımda Google'ın kendi ekranında yapılır. İstediğin zaman vazgeçebilirsin.</p>
+        <div class="qa-google-actions">
+          <button type="button" id="qa-google-cancel">Vazgeç</button>
+          <button type="button" class="qa-google-continue" id="qa-google-continue">Google ile devam et</button>
+        </div>
+      </div>
 
       <div class="qa-status" id="qa-google-status"></div>
       <div id="qa-platform-list"></div>
@@ -525,29 +618,42 @@ function hesapElemaniOlustur() {
 
   const googleButton = container.querySelector("#qa-google-link");
 
-  googleButton.addEventListener("click", async () => {
-    if (!quikSupabase || isProcessing) return;
+  const googleConsent = container.querySelector("#qa-google-consent");
+  const googleContinue = container.querySelector("#qa-google-continue");
+  const googleCancel = container.querySelector("#qa-google-cancel");
+  const googleStatus = container.querySelector("#qa-google-status");
 
+  // İlk tıklama OAuth'u başlatmaz; önce QuiK'in istediği izinleri açıklar.
+  googleButton.addEventListener("click", () => {
     if (googleHesabiBagliMi(aktifKullanici)) {
-      googleButton.disabled = true;
-      googleButton.textContent = "Google hesabı bağlı";
-      const status = container.querySelector("#qa-google-status");
-      status.textContent = "Google hesabın bu QuiK hesabına zaten bağlı.";
+      googleStatus.textContent = "Google hesabın bu QuiK hesabına zaten bağlı.";
       return;
     }
 
-    const status = container.querySelector("#qa-google-status");
-
     if (!window.quikAccount?.googleBagla) {
-      status.textContent =
+      googleStatus.textContent =
         "Google bağlantısı QuiK masaüstü uygulamasında kullanılabilir.";
       return;
     }
 
+    googleConsent.classList.add("show");
+    googleButton.textContent = "İzinler inceleniyor";
+    googleStatus.textContent = "Devam etmeden önce QuiK'in istediği erişimleri incele.";
+  });
+
+  googleCancel.addEventListener("click", () => {
+    googleConsent.classList.remove("show");
+    googleButton.textContent = "Google hesabını bağla";
+    googleStatus.textContent = "Google bağlantısı başlatılmadı.";
+  });
+
+  googleContinue.addEventListener("click", async () => {
+    if (!quikSupabase || isProcessing) return;
+
     isProcessing = true;
-    googleButton.disabled = true;
-    googleButton.textContent = "Hazırlanıyor...";
-    status.textContent = "";
+    googleContinue.disabled = true;
+    googleContinue.textContent = "Hazırlanıyor...";
+    googleStatus.textContent = "";
 
     try {
       const { data, error } = await quikSupabase.auth.getSession();
@@ -560,21 +666,18 @@ function hesapElemaniOlustur() {
         throw new Error("Önce QuiK hesabına giriş yapmalısın.");
       }
 
+      // Son onay ve gerçek yetkilendirme Google'ın OAuth ekranında yapılır.
       window.quikAccount.googleBagla(accessToken);
 
-      /* DÜZELTME:
-         Google bağlantısı arka planda sürerken diğer işlemleri kilitleme. */
       isProcessing = false;
-
-      googleButton.textContent = "Bağlantı bekleniyor...";
-      status.textContent =
-        "Google bağlantısı başlatılıyor. Varsayılan tarayıcıda işlemi tamamla.";
+      googleContinue.textContent = "Google'a yönlendiriliyor...";
+      googleStatus.textContent =
+        "Google'ın güvenli izin ekranı açılıyor. İzinleri orada onaylayabilir veya reddedebilirsin.";
     } catch (error) {
       console.error("Google bağlama başlatma hatası:", error);
-      status.textContent = hataMesaji(error);
-
-      googleButton.disabled = false;
-      googleButton.textContent = "Google hesabını bağla";
+      googleStatus.textContent = hataMesaji(error);
+      googleContinue.disabled = false;
+      googleContinue.textContent = "Google ile devam et";
       isProcessing = false;
     }
   });
